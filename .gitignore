@@ -4,3 +4,8 @@
 # Packaged
 *.zip
 *.7z
+
+# Simulator files
+INCA_libs/
+irun.*
+transcript
