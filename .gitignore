@@ -1,0 +1,6 @@
+# CSH setprojects
+*.csh
+
+# Packaged
+*.zip
+*.7z
