@@ -5,9 +5,6 @@
 // ------------------------------------------------------------
 
 module yas_router_top
-#(
-parameter DATA_WIDTH=8
-)
 (
   input clk,
   input rst_n,
@@ -24,27 +21,39 @@ parameter DATA_WIDTH=8
   input [1:0] config_data,
   input config_en
 );
-// INTERNAL WIRES
-// from config regs
-wire [1:0] ch0_addr;
-wire [1:0] ch1_addr;
-wire [1:0] ch2_addr;
-wire       crc_en;
 
+  localparam DATA_WIDTH = 8;
+  localparam DATA_SIZE = 6; //max 64 bytes
 
+  // INTERNAL WIRES
+  // from config regs
+  wire [1:0] ch0_addr;
+  wire [1:0] ch1_addr;
+  wire [1:0] ch2_addr;
+  wire       crc_en;
 
-config_regs
-config_regs_inst
-(
-  .clk(clk),
-  .rst_n(rst_n),
-  .config_addr(config_addr),
-  .config_data(config_data),
-  .config_en(config_en),
-  .ch0_addr(ch0_addr),
-  .ch1_addr(ch1_addr),
-  .ch2_addr(ch2_addr),
-  .crc_en(crc_en)
-);
+  /*
+  input_logic
+  input_logic_inst
+#(.DATA_WIDTH(DATA_WIDTH),
+  .DATA_SIZE(DATA_SIZE))
+  (
+  );
+
+  */
+
+  config_regs
+  config_regs_inst
+  (
+    .clk(clk),
+    .rst_n(rst_n),
+    .config_addr(config_addr),
+    .config_data(config_data),
+    .config_en(config_en),
+    .ch0_addr(ch0_addr),
+    .ch1_addr(ch1_addr),
+    .ch2_addr(ch2_addr),
+    .crc_en(crc_en)
+  );
 
 endmodule
