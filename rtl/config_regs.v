@@ -1,34 +1,35 @@
-// -------------------------------------------------------------
+// ------------------------------------------------------------
 // Module: config_regs.v
 // Author: PWI
 // Release: 1.0, Jan 2019
-// -------------------------------------------------------------
+// ------------------------------------------------------------
 
-module config_regs #(
+module config_regs
+#(
   parameter CH0_REG_ADDR = 2'h0,
   parameter CH1_REG_ADDR = 2'h1,
   parameter CH2_REG_ADDR = 2'h2,
   parameter CRC_EN_REG_ADDR = 2'h3
 )
 (
-  input       clk,
-  input       rst_n,
-  input [1:0] config_addr,
-  input [1:0] config_data,
-  input       config_en,
-  output      ch0_addr,
-  output      ch1_addr,
-  output      ch2_addr,
-  output      crc_en
+  input        clk,
+  input        rst_n,
+  input  [1:0] config_addr,
+  input  [1:0] config_data,
+  input        config_en,
+  output [1:0] ch0_addr,
+  output [1:0] ch1_addr,
+  output [1:0] ch2_addr,
+  output       crc_en
 );
 
-  //Registers
+  // Registers
   reg   [1:0] ch0_addr_r;
   reg   [1:0] ch1_addr_r;
   reg   [1:0] ch2_addr_r;
   reg         crc_en_r;
 
-  //Output connections
+  // Output connections
   assign ch0_addr = ch0_addr_r;
   assign ch1_addr = ch1_addr_r;
   assign ch2_addr = ch2_addr_r;
