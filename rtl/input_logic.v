@@ -30,6 +30,7 @@ module input_logic
 
   assign data_in_ack = data_in_ack_r;
 
+  //TODO add byte cnt and split logic into modules?
 
   always @(posedge clk or negedge rst_n)
   begin: input_buffer_r_proc
