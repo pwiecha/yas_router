@@ -1,10 +1,12 @@
 #------------ Config regs submodule directed and constrained random tests --------------------------
-import sys, os
-import random
 import cocotb
 from cocotb.clock import Clock, Timer
 from cocotb.result import TestFailure
+from cocotb_coverage.coverage import *
 
+import sys, os
+import random
+import itertools
 sys.path.append(os.path.dirname(__file__) + '/../')
 from tb_common import *
 
@@ -41,20 +43,34 @@ def randomized_test(dut):
             data = random.randint(0,2)
 
         yield set_config_reg(dut, addr, data, log)
+        sample_coverage(addr, data)
         if int(addr_map[addr]) == data:
             log.info(f"Readback success on addr {addr}\n")
         else:
             log.info(f"Readback failure, data {data}, readback {int(addr_map[addr])}\n")
             raise TestFailure
 
+    # Coverage
+    channel_addr_data_product = itertools.product(range(0,3), range(0,3)) #cartesian product
+    ConfigRegsCoverage = coverageSection(
+            CoverPoint("top.config.crc_en", bins = [(3,0), (3,1)]),
+            CoverPoint("top.config.channel_addr", bins = list(channel_addr_data_product))
+    )
+    @ConfigRegsCoverage
+    #Empty function to catch metrics
+    def sample_coverage(addr, data):
+        pass
+
     # TEST BODY
     yield reset_dut(dut)
-    for i in range(5):
+    for i in range(45):
         yield check_config_regs_randomized(dut, log)
 
+    reportCoverage(log.info, bins=1)
+    coverage = coverage_db["top"].coverage*100/coverage_db["top"].size
+    log.info(f"Current coverage {coverage:.2f} %")
 
     #TODO cover all config_regs, generate addresses & values of not yet covered items
-    #TODO add coverage
 
 
 
