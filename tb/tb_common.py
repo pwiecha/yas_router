@@ -10,7 +10,7 @@ def wait_clock_cycles(clock, no_of_clock_cycles):
         yield RisingEdge(clock)
 
 @cocotb.coroutine
-def reset_dut(dut, CLOCK_PERIOD):
+def reset_dut(dut):
     dut.rst_n <= 0
-    yield Timer(CLOCK_PERIOD*5, units="ns")
+    yield wait_clock_cycles(dut.clk, 5)
     dut.rst_n <= 1
