@@ -19,7 +19,7 @@ Register interface
 Packet format [header / size / data / CRC], header first  
 2b header (address)  
 6b size (bytes)  
-1-64bytes data  
+1-63bytes data  
 8bit CRC (calculated over everything)  
 
 Bad address or CRC - packet discarded  

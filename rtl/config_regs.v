@@ -37,7 +37,7 @@ module config_regs
 
   //********** FUNCTIONAL PART **********
   always @(posedge clk or negedge rst_n)
-  begin: ch_addr_r_proc
+  begin: CH_ADDR_R_PROC
     if (!rst_n) begin
       {ch2_addr_r, ch1_addr_r, ch0_addr_r} <= 6'd0;
     end
@@ -52,7 +52,7 @@ module config_regs
   end
 
   always @(posedge clk or negedge rst_n)
-  begin: crc_en_r_proc
+  begin: CRC_EN_R_PROC
     if (!rst_n)
       crc_en_r <= 1'b0;
     else if (config_en) begin
