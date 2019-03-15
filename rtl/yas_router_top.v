@@ -56,41 +56,65 @@ module yas_router_top
 
   // INTERNAL WIRES
   // from config regs
-  wire [1:0] ch0_addr;
-  wire [1:0] ch1_addr;
-  wire [1:0] ch2_addr;
-  wire       crc_en;
+  wire            [1:0] ch0_addr;
+  wire            [1:0] ch1_addr;
+  wire            [1:0] ch2_addr;
+  wire                  crc_en;
 
-  /*
+  // input logic <-> fifo
+  wire            [2:0] fifo_push;
+  wire            [2:0] fifo_flush;
+  wire            [2:0] fifo_full;
+  wire            [2:0] fifo_pkt_start;
+  wire [DATA_WIDTH-1:0] fifo_data_in;
+
   input_logic
   input_logic_inst
-#(.DATA_WIDTH(DATA_WIDTH),
-  .DATA_SIZE(DATA_SIZE))
+  #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .DATA_SIZE(DATA_SIZE)
+  )
   (
+    .clk(clk),
+    .rst_n(rst_n),
+    // Input IF
+    .data_in(data_in),
+    .data_in_req(data_in_req),
+    .data_in_ack(data_in_ack),
+    //FIFO IF
+    .fifo_push(fifo_push),
+    .fifo_flush(fifo_flush),
+    .fifo_full(fifo_full),
+    .fifo_data_in(fifo_data_in),
+    .fifo_pkt_start(fifo_pkt_start),
+    // Config IF
+    .ch0_addr(ch0_addr),
+    .ch1_addr(ch1_addr),
+    .ch2_addr(ch2_addr),
+    .crc_en(crc_en)
   );
-
-  */
 
   genvar i;
   generate for (i=0; i<3; i=i+1)
   begin: FIFO_GENERATE_PROC
     fifo_synch
     fifo_inst
-    #( .DATA_WIDTH(DATA_WIDTH),
-       .POINTER_WIDTH(DATA_SIZE)
+    #(
+      .DATA_WIDTH(DATA_WIDTH),
+      .POINTER_WIDTH(DATA_SIZE)
     )
     (
       .clk(clk),
       .rst_n(rst_n),
-      .data_in(),
-      .pkt_start(),
-      .flush(),
+      .data_in(fifo_data_in),
+      .pkt_start(fifo_pkt_start[i]),
+      .flush(fifo_flush[i]),
       .level(),
-      .push(),
-      .pop(),
+      .push(fifo_push[i]),
+      .pop(fifo_pop[i]),
       .data_out(),
-      .full(),
-      .empty()
+      .full(fifo_full[i]),
+      .empty(fifo_empty[i])
     );
   end
   endgenerate
