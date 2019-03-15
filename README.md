@@ -17,9 +17,10 @@ Register interface
 
 
 Packet format [header / size / data / CRC], header first  
-2b header (address)  
-6b size (bytes)  
-1-63bytes data  
+HEADER MSB [HEADER|SIZE] LSB :
+2b (address)  
+6b payload size (bytes)  
+1-63bytes data  (size+1, no empty pkts)  
 8bit CRC (calculated over everything)  
 
 Bad address or CRC - packet discarded  

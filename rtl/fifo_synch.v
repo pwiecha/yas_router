@@ -1,8 +1,10 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2019, TDK Electronics, Pawel Wiecha
+Copyright (c) 2019, TDK Electronics
 All rights reserved.
+
+Author: Pawel Wiecha, https://github.com/pwiecha
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -71,7 +73,7 @@ assign empty = (wr_pointer_r == rd_pointer_r) ? 1'b1 : 1'b0;
 // DATA IN/OUT HANDLING
 assign data_out = fifo_r[rd_pointer_r[POINTER_WIDTH-1:0]];
 
-always @(posedge clk or negedge rst_n)
+always @(posedge clk)
 begin: FIFO_R_PROC
   if (push) begin
     fifo_r[wr_pointer_r[POINTER_WIDTH-1:0]] <= data_in;
