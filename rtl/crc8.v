@@ -14,12 +14,13 @@
 // should have HD=3 (detect 2b) for packets up to 247b (incl 8 CRC bits), HD=2 (detect 1b) else
 // PWI - formatting and switched rst to asynch active low
 //-----------------------------------------------------------------------------
-module crc(
+module crc8
+(
+  input        clk,
+  input        rst_n,
   input  [7:0] data_in,
   input        crc_en,
-  output [7:0] crc_out,
-  input        rst,
-  input        clk
+  output [7:0] crc_out
 );
 
   reg [7:0] lfsr_r,lfsr_c;
@@ -40,7 +41,7 @@ module crc(
 
   always @(posedge clk or negedge rst_n)
   begin: lfsr_r_proc
-    if(rst) begin
+    if(!rst_n) begin
       lfsr_r <= {8{1'b1}};
     end
     else begin

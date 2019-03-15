@@ -66,8 +66,14 @@ module input_logic
   reg  [DATA_SIZE-1:0] pkt_cnt_r;
   reg            [1:0] pkt_addr_r;
 
-  wire                 bad_data_size_c;
-  wire           [2:0] ch_sel_c;
+  reg                  bad_data_size_c;
+  reg            [2:0] ch_sel_c;
+
+  wire                 crc8_en;
+  reg                  crc_next_c;
+  reg                  bad_crc_c;
+  reg            [1:0] check_crc_r;
+  wire           [7:0] crc_out;
 
   reg            [1:0] state_r, state_next_c;
 
@@ -75,6 +81,19 @@ module input_logic
 
   assign fifo_push = fifo_push_c;
   assign fifo_flush = fifo_flush_c;
+
+  //CRC INSTANCE
+  assign crc8_en = crc_en & data_in_ack_r;
+
+  crc8
+  crc8_inst
+  (
+    .clk(clk),
+    .rst_n(rst_n),
+    .data_in(data_in_r),
+    .crc_en(crc8_en),
+    .crc_out(crc_out)
+  );
 
   // INPUT BUFFER & NEW PKT DETECTION
   always @(posedge clk or negedge rst_n)
@@ -135,7 +154,7 @@ module input_logic
       // load SIZE+1
       pkt_cnt_r <= data_in_r[DATA_SIZE-1:0]+1'b1;
     end
-    else if ((state_r == DATA || state_r == DISCARD) && data_in_ack_r)
+    else if ((state_r == DATA || state_r == DISCARD) && data_in_ack_r && pkt_cnt_r != {DATA_WIDTH{1'b0}})
       pkt_cnt_r <= pkt_cnt_r-1'b1;
   end
 
@@ -155,13 +174,13 @@ module input_logic
     fifo_flush_c = 1'b0;
     fifo_push_c = 1'b0;
     data_in_ack_c = 1'b0;
-    if (crc_en && bad_crc_c && state_r == DATA) begin
+    if (bad_crc_c) begin
       fifo_flush_c = 1'b1;
     end
     if ((!fifo_full && data_in_req && !data_in_ack_r) || state_r == DISCARD) begin
       data_in_ack_c = 1'b1;
     end
-    if (data_in_ack_r) begin
+    if (data_in_ack_r && state_r == DATA) begin
       fifo_push_c = 1'b1;
     end
   end
@@ -174,6 +193,32 @@ module input_logic
     else begin
       data_in_ack_r <= data_in_ack_c;
     end
+  end
+
+  // CRC logic
+  always @(*)
+  begin: crc_next_c_proc
+    if (crc_en && state_r == DATA && pkt_cnt_r == {DATA_WIDTH{1'b0}})
+      crc_next_c = 1'b1;
+    else
+      crc_next_c = 1'b0;
+  end
+
+  always @(posedge clk or negedge rst_n)
+  begin: check_crc_r_proc
+    if (!rst_n) begin
+      check_crc_r <= 2'b00;
+    end
+    else if (state_r == DATA) begin
+      check_crc_r <= {check_crc_r[0], crc_next_c};
+    end
+  end
+
+  always @(*)
+  begin: bad_crc_c_proc
+    bad_crc_c = 1'b0;
+    if (check_crc_r[1] && crc_out != data_in_r)
+      bad_crc_c = 1'b1;
   end
 
     // FSM
@@ -205,10 +250,7 @@ module input_logic
             state_next_c = DATA;
           end
         DATA:
-          if (crc_en && bad_crc_c) begin
-            state_next_c = DISCARD;
-          end
-          else if (pkt_cnt_r == {DATA_SIZE{1'b0}}) begin
+          if (pkt_cnt_r == {DATA_SIZE{1'b0}} || (crc_en && check_crc_r[1] && bad_crc_c)) begin
             state_next_c = IDLE;
           end
           else begin
