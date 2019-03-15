@@ -1,8 +1,10 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2019, TDK Electronics, Pawel Wiecha
+Copyright (c) 2019, TDK Electronics
 All rights reserved.
+
+Author: Pawel Wiecha, https://github.com/pwiecha
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -64,7 +66,7 @@ module config_regs
 
   //********** FUNCTIONAL PART **********
   always @(posedge clk or negedge rst_n)
-  begin: CH_ADDR_R_PROC
+  begin: ch_addr_r_proc
     if (!rst_n) begin
       {ch2_addr_r, ch1_addr_r, ch0_addr_r} <= 6'd0;
     end
@@ -79,7 +81,7 @@ module config_regs
   end
 
   always @(posedge clk or negedge rst_n)
-  begin: CRC_EN_R_PROC
+  begin: crc_en_r_proc
     if (!rst_n)
       crc_en_r <= 1'b0;
     else if (config_en) begin

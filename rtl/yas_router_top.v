@@ -1,8 +1,10 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2019, TDK Electronics, Pawel Wiecha
+Copyright (c) 2019, TDK Electronics
 All rights reserved.
+
+Author: Pawel Wiecha, https://github.com/pwiecha
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -68,6 +70,32 @@ module yas_router_top
   );
 
   */
+
+  genvar i;
+  generate for (i=0; i<3; i=i+1)
+  begin: FIFO_GENERATE_PROC
+    fifo_synch
+    fifo_inst
+    #( .DATA_WIDTH(DATA_WIDTH),
+       .POINTER_WIDTH(DATA_SIZE)
+    )
+    (
+      .clk(clk),
+      .rst_n(rst_n),
+      .data_in(),
+      .pkt_start(),
+      .flush(),
+      .level(),
+      .push(),
+      .pop(),
+      .data_out(),
+      .full(),
+      .empty()
+    );
+  end
+  endgenerate
+
+  /*output logic inst */
 
   config_regs
   config_regs_inst

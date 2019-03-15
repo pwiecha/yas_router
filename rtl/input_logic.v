@@ -1,8 +1,10 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2019, TDK Electronics, Pawel Wiecha
+Copyright (c) 2019, TDK Electronics
 All rights reserved.
+
+Author: Pawel Wiecha, https://github.com/pwiecha
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -31,53 +33,136 @@ module input_logic
   parameter DATA_SIZE = 6
 )
 (
-  input clk,
-  input rst_n,
+  input                  clk,
+  input                  rst_n,
   // Input IF
   input [DATA_WIDTH-1:0] data_in,
-  input data_in_req,
-  output reg data_in_ack,
+  input                  data_in_req,
+  output                 data_in_ack,
+  //FIFO IF
+  output                 fifo_push,
+  output                 fifo_flush,
+  input                  fifo_full,
   // Config IF
-  input [1:0] ch0_addr,
-  input [1:0] ch1_addr,
-  input [1:0] ch2_addr,
-  input       crc_en
-)
-  localparam [1:0] IDLE = 2'b00, ADDR_SIZE = 2'b01,
-  DATA = 2'b10, DISCARD = 2'b11;
+  input            [1:0] ch0_addr,
+  input            [1:0] ch1_addr,
+  input            [1:0] ch2_addr,
+  input                  crc_en
+);
+  localparam [1:0] IDLE = 2'b00, HEADER  = 2'b01,
+                   DATA = 2'b10, DISCARD = 2'b11;
 
-  reg data_in_ack_r;
-  reg [DATA_WIDTH-1:0] input_buffer_r;
+  // Input IF
+  reg                  data_in_ack_r;
+  reg [DATA_WIDTH-1:0] data_in_r;
 
-  reg [DATA_SIZE:0] data_cnt_r;
+  // FIFO IF
+  reg                  fifo_flush_c;
+  reg                  fifo_push_c;
+  reg                  data_in_ack_c;
 
-  // FSM
-  reg [1:0] state_r, state_next_c;
+  // Internal
+  reg                  req_edge_detect_r;
+  reg  [DATA_SIZE-1:0] pkt_cnt_r;
+  reg            [1:0] pkt_addr_r;
 
+  wire                 bad_data_size_c;
+  wire           [2:0] ch_sel_c;
+
+  reg            [1:0] state_r, state_next_c;
 
   assign data_in_ack = data_in_ack_r;
 
-  //TODO add byte cnt and split logic into modules?
+  assign fifo_push = fifo_push_c;
+  assign fifo_flush = fifo_flush_c;
 
-  always @(posedge clk or negedge rst_n)
-  begin: input_buffer_r_proc
-    if (!rst_n) begin
-      input_buffer_r <= {DATA_WIDTH{1'b0}};
-    end
-    else if (data_in_req) begin
-      input_buffer_r <= data_in;
-    end
-
+  // INPUT BUFFER & NEW PKT DETECTION
   always @(posedge clk or negedge rst_n)
   begin: req_edge_detect_r_proc
     if (!rst_n) begin
       req_edge_detect_r <= 1'b0;
     end
-    else if (data_in_req && !req_edge_detect_r) begin
+    else if (data_in_req && !req_edge_detect_r && state_r == IDLE) begin
       req_edge_detect_r <= 1'b1;
     end
-    else if ((state_r == DATA || state_r == DISCARD) && state_next_c == IDLE) begin
+    else begin
       req_edge_detect_r <= 1'b0;
+    end
+  end
+
+  always @(posedge clk or negedge rst_n)
+  begin: data_in_r_proc
+    if (!rst_n) begin
+      data_in_r <= {DATA_WIDTH{1'b0}};
+    end
+    else if (data_in_req) begin
+      data_in_r <= data_in;
+    end
+  end
+
+  // HEADER - ADDR & CH_SEL
+  always @(posedge clk or negedge rst_n)
+  begin: pkt_addr_r_proc
+    if (!rst_n) begin
+      pkt_addr_r <= 2'b00;
+    end
+    else if (req_edge_detect_r && state_r == IDLE) begin
+      pkt_addr_r <= data_in[DATA_SIZE-1:DATA_SIZE-3];
+    end
+  end
+
+  always @(*)
+  begin: ch_sel_c_proc
+    ch_sel_c = 3'b000;
+    if(pkt_addr_r == ch0_addr) begin
+      ch_sel_c[0] = 1'b1;
+    end
+    if(pkt_addr_r == ch1_addr) begin
+      ch_sel_c[1] = 1'b1;
+    end
+    if(pkt_addr_r == ch2_addr) begin
+      ch_sel_c[2] = 1'b1;
+    end
+  end
+
+  // HEADER - PKT SIZE, ADDR
+  always @(posedge clk or negedge rst_n)
+  begin: pkt_cnt_r_proc
+    if (!rst_n) begin
+      pkt_cnt_r <= {DATA_WIDTH{1'b0}};
+    end
+    else if (req_edge_detect_r && state_r == IDLE) begin
+      // load SIZE+1
+      pkt_cnt_r <= data_in_r[DATA_SIZE-1:0]+1'b1;
+    end
+    else if ((state_r == DATA || state_r == DISCARD) && data_in_ack_r)
+      pkt_cnt_r <= pkt_cnt_r-1'b1;
+  end
+
+  always @(*)
+  begin: bad_data_size_c_proc
+    if (pkt_cnt_r == {DATA_WIDTH{1'b1}}) begin
+      bad_data_size_c = 1'b1;
+    end
+    else begin
+      bad_data_size_c = 1'b0;
+    end
+  end
+
+  // PUSH/FLUSH/ACK LOGIC
+  always @(*)
+  begin: push_flush_ack_logic_c_proc
+    fifo_flush_c = 1'b0;
+    fifo_push_c = 1'b0;
+    data_in_ack_c = 1'b0;
+    if (crc_en && bad_crc_c && state_r == DATA) begin
+      fifo_flush_c = 1'b1;
+    end
+    if ((!fifo_full && data_in_req && !data_in_ack_r) || state_r == DISCARD) begin
+      data_in_ack_c = 1'b1;
+    end
+    if (data_in_ack_r) begin
+      fifo_push_c = 1'b1;
     end
   end
 
@@ -87,20 +172,16 @@ module input_logic
       data_in_ack_r <= 1'b0;
     end
     else begin
-      //set ack hi - add control logic
-      if () begin
-        data_in_ack_r <= 1'b1;
-      //if fifo full - stall
-      else begin
-        data_in_ack_r <= 1'b0;
-      end
+      data_in_ack_r <= data_in_ack_c;
     end
+  end
 
     // FSM
     always @(posedge clk or negedge rst_n)
     begin: state_r_proc
       if (!rst_n) begin
-        state_r <= 2'd0;
+        state_r <= 2'b00;
+      end
       else begin
         state_r <= state_next_c;
       end
@@ -111,13 +192,13 @@ module input_logic
       case (state_r)
         IDLE:
           if (req_edge_detect_r) begin
-            state_next_c = ADDR_SIZE;
+            state_next_c = HEADER;
           end
           else begin
             state_next_c = IDLE;
           end
-        ADDR_SIZE:
-          if (bad_addr_c) begin
+        HEADER:
+          if (ch_sel_c == 3'b000 || bad_data_size_c) begin
             state_next_c = DISCARD;
           end
           else begin
@@ -125,16 +206,16 @@ module input_logic
           end
         DATA:
           if (crc_en && bad_crc_c) begin
-            state_next_c = DISCARD
+            state_next_c = DISCARD;
           end
-          else if (data_cnt_r == {DATA_SIZE{1'b0}}) begin
+          else if (pkt_cnt_r == {DATA_SIZE{1'b0}}) begin
             state_next_c = IDLE;
           end
           else begin
             state_next_c = DATA;
           end
         DISCARD: //wait for pkt to end, ack all bytes
-          if (data_cnt_r == {DATA_SIZE{1'b0}}) begin
+          if (pkt_cnt_r == {DATA_SIZE{1'b0}}) begin
             state_next_c = IDLE;
           end
           else begin
@@ -142,8 +223,5 @@ module input_logic
           end
       endcase
     end
-
-
-
 
 endmodule
