@@ -1,8 +1,10 @@
 '''
 BSD 2-Clause License
 
-Copyright (c) 2019, TDK Electronics, Pawel Wiecha
+Copyright (c) 2019, TDK Electronics
 All rights reserved.
+
+Author: Pawel Wiecha, https://github.com/pwiecha
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

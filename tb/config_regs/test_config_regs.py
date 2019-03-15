@@ -1,8 +1,10 @@
 '''
 BSD 2-Clause License
 
-Copyright (c) 2019, TDK Electronics, Pawel Wiecha
+Copyright (c) 2019, TDK Electronics
 All rights reserved.
+
+Author: Pawel Wiecha, https://github.com/pwiecha
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -42,16 +44,22 @@ def randomized_test(dut):
     """ Randomized config regs test """
     #Enable logger
     log = cocotb.logging.getLogger("cocotb.test")
+    DEBUG = False
+
+    global error_cnt
+    error_cnt = 0
 
     CLOCK_PERIOD = 1
     cocotb.fork(Clock(dut.clk, int(CLOCK_PERIOD), units='us').start())#1MHz
 
     @cocotb.coroutine
     def check_config_regs_randomized(dut, log):
+        global error_cnt
         @cocotb.coroutine
         def set_config_reg(dut, addr, data, log):
             yield RisingEdge(dut.clk)
-            log.info(f"Storing data: {data} in reg addr {addr}")
+            if DEBUG:
+                log.info(f"Storing data: {data} in reg addr {addr}")
             dut.config_addr <= addr
             dut.config_data <= data
             dut.config_en <= 1
@@ -71,9 +79,11 @@ def randomized_test(dut):
 
         yield set_config_reg(dut, addr, data, log)
         sample_coverage(addr, data) #Gather coverage
-        log.info(f"Reading data back: {int(addr_map[addr])} from reg addr {addr}\n")
+        if DEBUG:
+            log.info(f"Reading data back: {int(addr_map[addr])} from reg addr {addr}\n")
         if int(addr_map[addr]) != data:
-            raise TestFailure(f"Readback failure, data mismatch")
+            log.error(f"Readback failure, data mismatch")
+            error_cnt += 1
 
     # Coverage
     channel_addr_data_product = itertools.product(range(0,3), range(0,3)) #cartesian product for channel addresses
@@ -93,4 +103,7 @@ def randomized_test(dut):
 
     reportCoverage(log.info, bins=True)
     coverage = coverage_db["top"].coverage*100/coverage_db["top"].size
-    raise TestSuccess(f"\nSummary: coverage achieved: {coverage:.2f}%")
+    if error_cnt == 0:
+        raise TestSuccess(f"\nSummary: coverage achieved: {coverage:.2f}%")
+    else:
+        raise TestFailure(f"There were {error_cnt} readback failures")

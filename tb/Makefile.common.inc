@@ -11,9 +11,8 @@ PLUSARGS := ${_QUESTA_BIN_ARGS}
 
 # Icarus hack - define sim timescale to 1ns/1ps, has to be done via cmd_file atm
 ifndef SIM
-	EXTRA_ARGS += -c $(PWD)/../iverilog_precision
+  EXTRA_ARGS += -c $(PWD)/../iverilog_precision
 endif
 ifeq ($(SIM), icarus)
-	EXTRA_ARGS += -c $(PWD)/../iverilog_precision
+  EXTRA_ARGS += -c $(PWD)/../iverilog_precision
 endif
-
