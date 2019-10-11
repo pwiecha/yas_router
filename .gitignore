@@ -9,3 +9,6 @@
 INCA_libs/
 irun.*
 transcript
+
+# Byte-compiled
+__pycache__/

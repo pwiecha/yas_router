@@ -1,6 +1,0 @@
-[submodule "tb/cocotb-coverage"]
-	path = tb/cocotb-coverage
-	url = https://github.com/mciepluc/cocotb-coverage.git
-[submodule "tb/cocotb"]
-	path = tb/cocotb
-	url = https://github.com/potentialventures/cocotb.git
