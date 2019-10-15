@@ -1,3 +1,4 @@
+import cocotb_test
 from cocotb_test.run import run
 import sys, os
 import pytest
@@ -7,29 +8,30 @@ tb_path = cwd + "/../tb"
 sys.path.append(cwd)
 sys.path.append(tb_path)
 
-#os.environ["SIM"] = "questa"
-mysim = os.environ.get("SIM")
-if mysim is None or mysim == "icarus":
-    try:
-        os.environ["EXTRA_ARGS"] += os.pathsep + f"-c {cwd}/iverilog_precision"
-    except KeyError:
-        os.environ["EXTRA_ARGS"] = f"-c {cwd}/iverilog_precision"
+simulator = "icarus"
+os.environ["SIM"] = "icarus"
+
+#simulator = "questa"
+#os.environ["SIM"] = "questa" # has to be set from environ
+
+# cannot open file for reading problem
+if simulator == "icarus":
+    extra_args = [f"-c {cwd}/iverilog_precision"]
+else:
+    extra_args = []
 
 rtl_path = cwd + "/../rtl"
-verilog_sources=["config_regs.v"]
-rtl_list = [rtl_path+"/"+f for f in verilog_sources]
-os.environ["VERILOG_SOURCES"] = os.pathsep.join(rtl_list)
-os.environ["MODULE"] = "tb_config_regs"
-os.environ["TOPLEVEL"] = "config_regs"
-os.environ["TOPLEVEL_LANG"] = "verilog"
+rtl_files = ["config_regs.v"]
+rtl_list = [rtl_path+"/"+f for f in rtl_files]
 
-
-def test_1():
+def test_basic():
     run(
-        verilog_sources=f"{rtl_path}/config_regs.v",
+        #simulator=cocotb_test.simulator.Icarus, # cannot pass a string, only sim obj
+        verilog_sources=rtl_list, # always a list
         toplevel="config_regs",
-        module="tb_config_regs")
+        module="tb_config_regs",
+        extra_args=extra_args)
 
 
 if __name__ == "__main__":
-    test_1()
+    test_basic()
