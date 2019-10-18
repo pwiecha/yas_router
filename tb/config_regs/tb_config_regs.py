@@ -59,7 +59,7 @@ def randomized_test(dut):
 
     # Coverage
     channel_addr_data_product = itertools.product(range(0,3), range(0,3)) #cartesian product for channel addresses
-    ConfigRegsCoverage = coverageSection(
+    ConfigRegsCoverage = coverage_section(
             CoverPoint("top.config.crc_en", bins = [(3,0), (3,1)]),
             CoverPoint("top.config.channel_addr", bins = list(channel_addr_data_product))
     )
@@ -70,11 +70,12 @@ def randomized_test(dut):
 
     # TEST BODY
     yield reset_dut(dut)
-    for i in range(50):
+    for i in range(10):
         yield check_config_regs_randomized(dut, log)
 
-    reportCoverage(log.info, bins=True)
+    coverage_db.report_coverage(log.info, bins=True)
     coverage = coverage_db["top"].coverage*100/coverage_db["top"].size
+    coverage_db.export_to_yaml(os.getenv("COVERAGE_RESULTS_FILENAME", "results_coverage.yml"))
     if error_cnt == 0:
         raise TestSuccess(f"\nSummary: coverage achieved: {coverage:.2f}%")
     else:

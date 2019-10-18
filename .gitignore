@@ -12,3 +12,6 @@ transcript
 
 # Byte-compiled
 __pycache__/
+
+# Vim swap files
+*.swp
