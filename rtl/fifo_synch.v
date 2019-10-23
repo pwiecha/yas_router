@@ -15,8 +15,8 @@ module fifo_synch
   input                      clk,
   input                      rst_n,
   input  [DATA_WIDTH-1:0]    data_in,
-  input                      pkt_start, // fifo will store wr_ptr
-  input                      flush, // go back to stored wr_ptr
+  input                      wr_ptr_upd, // update the pointer
+  input                      flush, // go back to stored ptr
   output                     level,
   input                      push,
   output                     pop,
@@ -30,7 +30,7 @@ localparam FIFO_DEPTH = 1 << POINTER_WIDTH; //2^6=64 cells
 reg [DATA_WIDTH-1:0]    fifo_r [FIFO_DEPTH-1:0];
 reg [POINTER_WIDTH:0]   rd_pointer_r; //+wrap indicator bit
 reg [POINTER_WIDTH:0]   wr_pointer_r; //+wrap indicator bit
-reg [POINTER_WIDTH:0]   wr_pointer_prev_r; //+wrap indicator bit
+reg [POINTER_WIDTH:0]   wr_pointer_new_r; //+wrap indicator bit
 reg [POINTER_WIDTH-1:0] level_r;
 wire                    full_bit;
 
@@ -63,28 +63,28 @@ begin: RD_POINTER_R_PROC
 end
 
 always @(posedge clk or negedge rst_n)
-begin: WR_POINTER_R_PROC
+begin: WR_POINTER_NEW_R_PROC
   if (!rst_n) begin
     wr_pointer_r <= {POINTER_WIDTH+1{1'b0}};
   end
   else begin
     if (flush) begin
-      // discard pkt with bad CRC, go back to prev
-      wr_pointer_r <= wr_pointer_prev_r;
+      // discard pkt with bad CRC, rewind the pointer
+      wr_pointer_new_r <= wr_pointer_r;
     end
     else if (!full && push) begin
-      wr_pointer_r <= wr_pointer_r+1'b1;
+      wr_pointer_new_r <= wr_pointer_new_r+1'b1;
     end
   end
 end
 
 always @(posedge clk or negedge rst_n)
-begin: WR_POINTER_PREV_R_PROC
+begin: WR_POINTER_R_PROC
   if (!rst_n) begin
-    wr_pointer_prev_r <= {POINTER_WIDTH+1{1'b0}};
+    wr_pointer_r <= {POINTER_WIDTH+1{1'b0}};
   end
-  else if (pkt_start) begin
-    wr_pointer_prev_r <= wr_pointer_r;
+  else if (wr_ptr_upd) begin
+    wr_pointer_r <= wr_pointer_new_r;
   end
 end
 

@@ -36,8 +36,11 @@ module yas_router_top
   wire            [2:0] fifo_push;
   wire            [2:0] fifo_flush;
   wire            [2:0] fifo_full;
-  wire            [2:0] fifo_pkt_start;
+  wire            [2:0] fifo_wr_ptr_upd;
   wire [DATA_WIDTH-1:0] fifo_data_in;
+
+  // fifo <-> output logic
+  wire [(3*DATA_WIDTH)-1:0] fifo_data_out;
 
   input_logic
   input_logic_inst
@@ -52,12 +55,12 @@ module yas_router_top
     .data_in(data_in),
     .data_in_req(data_in_req),
     .data_in_ack(data_in_ack),
-    //FIFO IF
+    // FIFO IF
     .fifo_push(fifo_push),
     .fifo_flush(fifo_flush),
     .fifo_full(fifo_full),
     .fifo_data_in(fifo_data_in),
-    .fifo_pkt_start(fifo_pkt_start),
+    .fifo_wr_ptr_upd(fifo_wr_ptr_upd),
     // Config IF
     .ch0_addr(ch0_addr),
     .ch1_addr(ch1_addr),
@@ -67,7 +70,7 @@ module yas_router_top
 
   genvar i;
   generate for (i=0; i<3; i=i+1)
-  begin: FIFO_GENERATE_PROC
+  begin: FIFO_AND_OUTPUT_LOGIC_GENERATE_PROC
     fifo_synch
     fifo_inst
     #(
@@ -78,14 +81,23 @@ module yas_router_top
       .clk(clk),
       .rst_n(rst_n),
       .data_in(fifo_data_in),
-      .pkt_start(fifo_pkt_start[i]),
+      .wr_ptr_upd(fifo_wr_ptr_upd[i]),
       .flush(fifo_flush[i]),
       .level(),
       .push(fifo_push[i]),
       .pop(fifo_pop[i]),
-      .data_out(),
+      .data_out(fifo_data_out),
       .full(fifo_full[i]),
       .empty(fifo_empty[i])
+    );
+
+    output_logic
+    output_logic_inst
+    #(
+      .DATA_WIDTH(DATA_WIDTH)
+    )
+    (
+
     );
   end
   endgenerate

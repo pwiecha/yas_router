@@ -13,7 +13,7 @@ module input_logic
   //FIFO IF
   output            [2:0] fifo_push,
   output            [2:0] fifo_flush,
-  output            [2:0] fifo_pkt_start,
+  output            [2:0] fifo_wr_ptr_upd,
   input             [2:0] fifo_full,
   output [DATA_WIDTH-1:0] fifo_data_in,
   // Config IF
@@ -32,7 +32,7 @@ module input_logic
   // FIFO IF
   reg            [1:0] fifo_flush_c;
   reg            [1:0] fifo_push_c;
-  reg            [1:0] fifo_pkt_start_c;
+  reg            [1:0] fifo_wr_ptr_upd_c;
   reg                  data_in_ack_c;
 
   // Internal
@@ -55,7 +55,7 @@ module input_logic
 
   assign fifo_push = fifo_push_c;
   assign fifo_flush = fifo_flush_c;
-  assign fifo_pkt_start = fifo_pkt_start_c;
+  assign fifo_wr_ptr_upd = fifo_wr_ptr_upd_c;
   assign fifo_data_in = data_in_r;
 
   //CRC INSTANCE
@@ -149,7 +149,7 @@ module input_logic
   begin: push_flush_start_ack_logic_c_proc
     fifo_flush_c = 3'b000;
     fifo_push_c = 3'b000;
-    fifo_pkt_start_c = 3'b000;
+    fifo_wr_ptr_upd_c = 3'b000;
     data_in_ack_c = 1'b0;
     if (bad_crc_c) begin
       fifo_flush_c[ch_sel_c] = 1'b1;
@@ -160,8 +160,10 @@ module input_logic
     if (data_in_ack_r && state_r == DATA) begin
       fifo_push_c[ch_sel_c] = 1'b1;
     end
-    if (req_edge_detect_r && state_r == IDLE) begin
-      fifo_pkt_start_c[ch_sel_c] = 1'b1;
+    //if ((req_edge_detect_r && state_r == IDLE)
+    //   || (state_r == DATA && pkt_cnt_r == {DATA_SIZE{1'b0}})) begin
+    if (state_r == DATA && state_next_c = IDLE && !bad_crc_c) begin
+      fifo_wr_ptr_upd_c[ch_sel_c] = 1'b1;
     end
   end
 
