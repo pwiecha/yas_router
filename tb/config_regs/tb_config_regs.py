@@ -1,36 +1,39 @@
 #---------- Config regs submodule containing
 #      directed and constrained random tests ----------
+# Cocotb imports
 import cocotb
 from cocotb.clock import Clock, Timer
+from cocotb.triggers import RisingEdge
 from cocotb.result import TestFailure, TestSuccess
 from cocotb_coverage.coverage import *
 
+# Generic imports
 import sys, os
 import random
 import itertools
 sys.path.append(os.path.dirname(__file__) + '/../')
-from tb_common import *
+
+# Local modules
+import tb_common
 
 @cocotb.test()
 def randomized_test(dut):
-    """ Randomized config regs test """
-    #Enable logger
+    """ Randomized config regs read/write test """
+    # Enable logger
     log = cocotb.logging.getLogger("cocotb.test")
-    DEBUG = False
+    args = tb_common.ArgParser(
+        log, cocotb.plusargs,
+        COLLECT_COVERAGE=(False, bool))
 
-    global error_cnt
-    error_cnt = 0
-
-    CLOCK_PERIOD = 1
-    cocotb.fork(Clock(dut.clk, int(CLOCK_PERIOD), units='us').start())#1MHz
+    tb_common.create_clock(dut.clk, args.CLK_RATE, log)
 
     @cocotb.coroutine
     def check_config_regs_randomized(dut, log):
-        global error_cnt
+
         @cocotb.coroutine
         def set_config_reg(dut, addr, data, log):
             yield RisingEdge(dut.clk)
-            if DEBUG:
+            if args.DEBUG:
                 log.info(f"Storing data: {data} in reg addr {addr}")
             dut.config_addr <= addr
             dut.config_data <= data
@@ -51,11 +54,13 @@ def randomized_test(dut):
 
         yield set_config_reg(dut, addr, data, log)
         sample_coverage(addr, data) #Gather coverage
-        if DEBUG:
+        if args.DEBUG:
             log.info(f"Reading data back: {int(addr_map[addr])} from reg addr {addr}\n")
         if int(addr_map[addr]) != data:
             log.error(f"Readback failure, data mismatch")
-            error_cnt += 1
+            return 1
+        else:
+            return 0
 
     # Coverage
     channel_addr_data_product = itertools.product(range(0,3), range(0,3)) #cartesian product for channel addresses
@@ -69,15 +74,19 @@ def randomized_test(dut):
         pass
 
     # TEST BODY
-    yield reset_dut(dut)
+    yield tb_common.reset_dut(dut)
+    failed_test_ids = []
     for i in range(10):
-        yield check_config_regs_randomized(dut, log)
+        test_result = yield check_config_regs_randomized(dut, log)
+        if test_result:
+            failed_test_ids.append(i)
 
     coverage_db.report_coverage(log.info, bins=True)
     coverage = coverage_db["top"].coverage*100/coverage_db["top"].size
     coverage_db.export_to_yaml(os.getenv("COVERAGE_RESULTS_FILENAME", "results_coverage.yml"))
+    error_cnt = len(failed_test_ids)
     if error_cnt == 0:
         raise TestSuccess(f"\nSummary: coverage achieved: {coverage:.2f}%")
     else:
-        raise TestFailure(f"There were {error_cnt} readback failures")
+        raise TestFailure(f"There were {error_cnt} readback failures, failed_test_ids: {failed_test_ids}")
 
