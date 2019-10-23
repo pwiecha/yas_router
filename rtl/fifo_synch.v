@@ -17,7 +17,7 @@ module fifo_synch
   input  [DATA_WIDTH-1:0]    data_in,
   input                      wr_ptr_upd, // update the pointer
   input                      flush, // go back to stored ptr
-  output                     level,
+  output [POINTER_WIDTH-1:0] level,
   input                      push,
   output                     pop,
   output [DATA_WIDTH-1:0]    data_out,
