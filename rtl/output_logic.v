@@ -22,7 +22,7 @@ module output_logic
       fifo_pop_r <= 1'b0;
       data_out_req_r <= 1'b0;
     end
-    else begin:
+    else begin
       if (!fifo_empty && !data_out_req_r) begin
         data_out_req_r <= 1'b1;
       end

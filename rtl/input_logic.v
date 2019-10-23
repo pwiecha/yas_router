@@ -162,7 +162,7 @@ module input_logic
     end
     //if ((req_edge_detect_r && state_r == IDLE)
     //   || (state_r == DATA && pkt_cnt_r == {DATA_SIZE{1'b0}})) begin
-    if (state_r == DATA && state_next_c = IDLE && !bad_crc_c) begin
+    if (state_r == DATA && state_next_c == IDLE && !bad_crc_c) begin
       fifo_wr_ptr_upd_c[ch_sel_c] = 1'b1;
     end
   end

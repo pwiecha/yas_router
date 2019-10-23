@@ -5,6 +5,10 @@
 // ------------------------------------------------------------
 
 module yas_router_top
+#(
+  parameter DATA_WIDTH = 8,
+  parameter DATA_SIZE = 6 //max 64 bytes
+)
 (
   input clk,
   input rst_n,
@@ -13,19 +17,16 @@ module yas_router_top
   input data_in_req,
   output reg data_in_ack,
   // OUTPUT IF
-  output reg [(3*DATA_WIDTH)-1:0] data_out,
-  output reg [(3*DATA_WIDTH)-1:0] data_out_req,
-  input [(3*DATA_WIDTH)-1:0] data_out_ack,
+  output [(3*DATA_WIDTH)-1:0] data_out,
+  output [2:0] data_out_req,
+  input [2:0] data_out_ack,
   // CONFIG IF
   input [1:0] config_addr,
   input [1:0] config_data,
   input config_en
 );
 
-  localparam DATA_WIDTH = 8;
-  localparam DATA_SIZE = 6; //max 64 bytes
-
-  // INTERNAL WIRES
+  // -------------------- INTERNAL WIRES --------------------
   // from config regs
   wire            [1:0] ch0_addr;
   wire            [1:0] ch1_addr;
@@ -39,15 +40,19 @@ module yas_router_top
   wire            [2:0] fifo_wr_ptr_upd;
   wire [DATA_WIDTH-1:0] fifo_data_in;
 
-  // fifo <-> output logic
+  // fifo <-> output logic & output
   wire [(3*DATA_WIDTH)-1:0] fifo_data_out;
+  wire [2:0] fifo_empty;
+  wire [2:0] fifo_pop;
 
+  assign fifo_data_out = data_out;
+  // -------------------- INSTANCES --------------------
   input_logic
-  input_logic_inst
   #(
     .DATA_WIDTH(DATA_WIDTH),
     .DATA_SIZE(DATA_SIZE)
   )
+  input_logic_inst
   (
     .clk(clk),
     .rst_n(rst_n),
@@ -72,11 +77,11 @@ module yas_router_top
   generate for (i=0; i<3; i=i+1)
   begin: FIFO_AND_OUTPUT_LOGIC_GENERATE_PROC
     fifo_synch
-    fifo_inst
     #(
       .DATA_WIDTH(DATA_WIDTH),
       .POINTER_WIDTH(DATA_SIZE)
     )
+    fifo_inst
     (
       .clk(clk),
       .rst_n(rst_n),
@@ -93,16 +98,16 @@ module yas_router_top
 
     output_logic
     output_logic_inst
-    #(
-      .DATA_WIDTH(DATA_WIDTH)
-    )
     (
-
+      .clk(clk),
+      .rst_n(rst_n),
+      .fifo_empty(fifo_empty[i]),
+      .fifo_pop(fifo_pop[i]),
+      .data_out_req(data_out_req[i]),
+      .data_out_ack(data_out_ack[i])
     );
   end
   endgenerate
-
-  /*output logic inst */
 
   config_regs
   config_regs_inst
