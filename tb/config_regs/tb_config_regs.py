@@ -23,7 +23,7 @@ def randomized_test(dut):
     log = cocotb.logging.getLogger("cocotb.test")
     args = tb_common.ArgParser(
         log, cocotb.plusargs,
-        COLLECT_COVERAGE=(False, bool))
+        COLLECT_COVERAGE=(True, bool))
 
     tb_common.create_clock(dut.clk, args.CLK_RATE, log)
 
@@ -48,7 +48,7 @@ def randomized_test(dut):
         addr = random.randint(0,3)
 
         if addr == 3: #CRC on/off
-            data = random.randint(0,1)
+            data = random.randint(0,1) # random implementation is inclusive
         else: #channel addresses
             data = random.randint(0,2)
 

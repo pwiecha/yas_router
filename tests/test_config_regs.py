@@ -9,7 +9,7 @@ updir = os.path.dirname
 join = os.path.join
 
 # Change this to change simulator or set SIM variable in run shell
-os.environ["SIM"] = "icarus"
+os.environ["SIM"] = "questa"
 
 # Pathing
 testsd = updir(os.path.abspath(__file__))
