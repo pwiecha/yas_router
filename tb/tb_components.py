@@ -63,7 +63,7 @@ class YasPkt():
         self.data_size = data_size
         self.crc_init = crc_init
         self.data = data
-        self.pkt = [self.addr << 6 + self.data_size, *self.data, self.crc]
+        self.payload = [self.addr << 6 + self.data_size, *self.data, self.crc]
 
     @property
     def data(self):
@@ -104,7 +104,9 @@ class InputDriver(Driver):
         self.req_port.setimmediatevalue(0)
 
     @cocotb.coroutine
-    def _driver_send(self, pkt;t
+    def _driver_send(self, pkt):
+        self.log.info(f"{self.name}: sending packet {pkt}")
+
 
 
 

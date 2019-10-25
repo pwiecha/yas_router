@@ -9,7 +9,7 @@ updir = os.path.dirname
 join = os.path.join
 
 # Change this to change simulator or set SIM variable in run shell
-os.environ["SIM"] = "questa"
+os.environ["SIM"] = "icarus"
 
 # Pathing
 testsd = updir(os.path.abspath(__file__))
@@ -27,7 +27,8 @@ elif simulator == "questa":
     compile_args = ["-timescale", "1ns/1ns"]
 
 # Tests to run
-@pytest.mark.parametrize('seed', random.sample(range(0, 10000), 4))
+#@pytest.mark.parametrize('seed', random.sample(range(0, 10000), 4))
+@pytest.mark.parametrize('seed', list(range(4)))
 def test_basic(seed):
     extra_env = {"COVERAGE_RESULTS_FILENAME": join(testsd, "sim_build", "config_regs_coverage_seed"+str(seed)+".yaml")}
     run(
