@@ -1,0 +1,6 @@
+###### Requirements for YAS Router ######
+pytest
+### COCOTB ###
+git+https://github.com/cocotb/cocotb@master
+git+https://github.com/mciepluc/cocotb-coverage@master
+git+https://github.com/themperek/cocotb-test@master
