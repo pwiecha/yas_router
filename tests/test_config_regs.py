@@ -26,9 +26,9 @@ if simulator == "icarus":
 elif simulator == "questa":
     compile_args = ["-timescale", "1ns/1ns"]
 
+random.seed(1337)
 # Tests to run
-#@pytest.mark.parametrize('seed', random.sample(range(0, 10000), 4))
-@pytest.mark.parametrize('seed', list(range(4)))
+@pytest.mark.parametrize('seed', random.sample(range(0, 10000), 10))
 def test_basic(seed):
     extra_env = {"COVERAGE_RESULTS_FILENAME": join(testsd, "sim_build", "config_regs_coverage_seed"+str(seed)+".yaml")}
     run(
