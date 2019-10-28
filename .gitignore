@@ -9,6 +9,7 @@
 INCA_libs/
 irun.*
 transcript
+sim_build/
 
 # Byte-compiled
 __pycache__/

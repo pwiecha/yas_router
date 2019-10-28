@@ -47,7 +47,7 @@ assign data_out = fifo_r[rd_pointer_r[POINTER_WIDTH-1:0]];
 always @(posedge clk)
 begin: FIFO_R_PROC
   if (push) begin
-    fifo_r[wr_pointer_r[POINTER_WIDTH-1:0]] <= data_in;
+    fifo_r[wr_pointer_new_r[POINTER_WIDTH-1:0]] <= data_in;
   end
 end
 
@@ -65,7 +65,7 @@ end
 always @(posedge clk or negedge rst_n)
 begin: WR_POINTER_NEW_R_PROC
   if (!rst_n) begin
-    wr_pointer_r <= {POINTER_WIDTH+1{1'b0}};
+    wr_pointer_new_r <= {POINTER_WIDTH+1{1'b0}};
   end
   else begin
     if (flush) begin

@@ -34,37 +34,35 @@ class YasConfigRand(YasConfig, Randomized):
 
 
 class YasPkt():
-    def __init__(self, addr=0, data_size=0, data=[], crc_init=0):
+    def __init__(self, config, addr=0, data_size=0, data=[], crc_init=0):
         self.addr = addr
         self.data_size = data_size
         self.crc_init = crc_init
         self.data = data
-        self.payload = [self.addr << 6 + self.data_size, *self.data, self.crc]
-
-    @property
-    def data(self):
-        return self.data
-
-    @data.setter
-    def data(self, new_data):
-        self.data = new_data
-        self.crc = self.calc_crc()
+        self.payload = [self.addr << 6 + self.data_size, *self.data]
+        self.crc_en = config.crc_en
+        if self.crc_en:
+            self.crc = self.calc_crc()
+            self.payload.append(self.crc)
 
     def calc_crc(self):
-        pass
+        return 37 #TODO implement CRC calculation
 
 
 class YasPktRand(YasPkt, Randomized):
-    def __init__(self):
+    def __init__(self, config):
         Randomized.__init__(self)
-        YasPkt.__init__(self)
+        YasPkt.__init__(self, config)
 
-        self.add_rand("addr", list(range(3)))
+        self.add_rand("addr", [config.ch0_addr, config.ch1_addr, config.ch2_addr])
         self.add_rand("data_size", list(range(1, 64)))
 
-    # populate data list bytewise
+    # populate data list bytewise, construct payload again
     def post_randomize(self):
         self.data = [r.randint(0, 255) for _ in range(self.data_size)]
+        self.payload = [(self.addr << 6) + self.data_size, *self.data]
+        if self.crc_en:
+            self.payload.append(self.crc)
 
 
 # TODO: create Bus bundle or use one from cocotb
@@ -116,7 +114,7 @@ class InputPktDriver(Driver):
         self.req_port.setimmediatevalue(0)
 
     @cocotb.coroutine
-    def _driver_send(self, pkt):
+    def _driver_send(self, pkt, **kwargs):
         self.log.info(f"{self.name}: sending packet {pkt}")
         for pkt_byte in pkt.payload:
             self.req_port <= 1
@@ -125,6 +123,7 @@ class InputPktDriver(Driver):
             while True:
                 yield ReadOnly()
                 if self.ack_port == 1:
+                    yield RisingEdge(self.clock)
                     self.req_port <= 0
                     break
                 yield RisingEdge(self.clock)

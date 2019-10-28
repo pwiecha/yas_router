@@ -32,14 +32,15 @@ def first_test(dut):
                                          dut_addr=dut.config_addr,
                                          dut_config_en=dut.config_en)
 
-    test_pkt = YasPktRand()
+    test_pkt = tb_comp.YasPktRand(config)
     test_pkt.randomize()
+    log.info(f"randomized yas pkt fields: addr {test_pkt.addr},\n data_size {test_pkt.data_size}\n crc_en {test_pkt.crc_en} \n data {test_pkt.data} \n payload: {test_pkt.payload}")
 
-    input_drv = InputPktDriver(name="input_driver",
-                               dut_clock=dut.clk,
-                               dut_data=dut.data_in,
-                               dut_req=dut.data_in_req,
-                               dut_ack=dut.data_in_ack)
+    input_drv = tb_comp.InputPktDriver(name="input_driver",
+                                       dut_clock=dut.clk,
+                                       dut_data=dut.data_in,
+                                       dut_req=dut.data_in_req,
+                                       dut_ack=dut.data_in_ack)
 
 
     # TEST BODY
@@ -47,4 +48,7 @@ def first_test(dut):
     yield tb_common.reset_dut(dut)
     yield config_driver.send(config)
     yield RisingEdge(dut.clk)
+    yield input_drv.send(test_pkt)
+    yield RisingEdge(dut.clk)
+
 

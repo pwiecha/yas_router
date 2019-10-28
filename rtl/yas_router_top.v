@@ -45,6 +45,8 @@ module yas_router_top
   wire [2:0] fifo_empty;
   wire [2:0] fifo_pop;
 
+  assign data_out = fifo_data_out;
+
   // -------------------- INSTANCES --------------------
   input_logic
   #(
@@ -74,7 +76,7 @@ module yas_router_top
 
   genvar i;
   generate for (i=0; i<3; i=i+1)
-  begin: FIFO_AND_OUTPUT_LOGIC_GENERATE_PROC
+  begin: FIFO_AND_OUT_LOGIC_GEN_PROC
     fifo_synch
     #(
       .DATA_WIDTH(DATA_WIDTH),

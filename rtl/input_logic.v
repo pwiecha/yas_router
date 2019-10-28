@@ -116,7 +116,7 @@ module input_logic
       ch_sel_c = 2'd1;
     end
     if(pkt_addr_r == ch2_addr) begin
-      ch_sel_c = 2'd1;
+      ch_sel_c = 2'd2;
     end
   end
 
@@ -128,7 +128,7 @@ module input_logic
     end
     else if (req_edge_detect_r && state_r == IDLE) begin
       // load SIZE+1
-      pkt_cnt_r <= data_in_r[DATA_SIZE-1:0]+1'b1;
+      pkt_cnt_r <= data_in_r[DATA_SIZE-1:0]+(crc_en ? 1'b1 : 1'b0);
     end
     else if ((state_r == DATA || state_r == DISCARD) && data_in_ack_r && pkt_cnt_r != {DATA_WIDTH{1'b0}})
       pkt_cnt_r <= pkt_cnt_r-1'b1;
@@ -238,7 +238,7 @@ module input_logic
           else begin
             state_next_c = DATA;
           end
-        DISCARD: //wait for pkt to end, ack all bytes
+        DISCARD: // wait for pkt to end, ack all bytes
           if (pkt_cnt_r == {DATA_SIZE{1'b0}}) begin
             state_next_c = IDLE;
           end
