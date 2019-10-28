@@ -2,6 +2,8 @@ import os
 import glob
 import cocotb_coverage.coverage as cov
 
+#TODO cleanup sim build from e.g. coverage files before running tests
+
 def pytest_runtest_setup(item):
     print("Setting up", item)
 
@@ -22,7 +24,6 @@ def pytest_sessionfinish(session, exitstatus):
         raise
 
     cov.merge_coverage(print, "merged_coverage"+filetype, *cov_files)
-    '''
     print("Removing merged coverage files: ")
     for f in cov_files:
         print(f)
@@ -31,7 +32,4 @@ def pytest_sessionfinish(session, exitstatus):
         except:
             print(f"Error occured when trying to delete {f}")
             raise
-    '''
-
-
 

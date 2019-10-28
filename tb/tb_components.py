@@ -1,60 +1,37 @@
 # ------------------- Helper Classes & Components ------------------
 # ----------------------- For Yas Rounter Testbench ------------------------
+import cocotb
 from cocotb_coverage.crv import Randomized
 from cocotb.drivers import Driver
+from cocotb.triggers import RisingEdge, ReadOnly
 import random as r
+
 
 class YasConfig():
     def __init__(self, ch0_addr=0, ch1_addr=1, ch2_addr=2, crc_en=0):
-        self.addr_map = {0 : self.ch0_addr,
-                         1 : self.ch1_addr,
-                         2 : self.ch2_addr,
-                         3 : self.crc_en}
+        self.ch0_addr = ch0_addr
+        self.ch1_addr = ch1_addr
+        self.ch2_addr = ch2_addr
+        self.crc_en = crc_en
+        self.addr_map = {0: self.ch0_addr,
+                         1: self.ch1_addr,
+                         2: self.ch2_addr,
+                         3: self.crc_en}
 
-    @property
-    def ch0_addr(self):
-        return self.addr_map[0]
-
-    @ch0_addr.setter
-    def ch0_addr(self, new_addr):
-        self.addr_map[0] = new_addr
-
-    @property
-    def ch1_addr(self):
-        return self.addr_map[1]
-
-    @ch1_addr.setter
-    def ch1_addr(self, new_addr):
-        self.addr_map[1] = new_addr
-
-    @property
-    def ch2_addr(self):
-        return self.addr_map[2]
-
-    @ch2_addr.setter
-    def ch2_addr(self, new_addr):
-        self.addr_map[2] = new_addr
-
-    @property
-    def crc_en(self):
-        return self.addr_map[3]
-
-    @ch0_addr.setter
-    def crc_en(self, crc_en):
-        self.addr_map[3] = crc_en
 
 class YasConfigRand(YasConfig, Randomized):
     def __init__(self):
         Randomized.__init__(self)
         YasConfig.__init__(self)
 
-        self.add_rand("ch0_addr", list(range(3))
-        self.add_rand("ch1_addr", list(range(3))
-        self.add_rand("ch2_addr", list(range(3))
+        self.add_rand("ch0_addr", list(range(3)))
+        self.add_rand("ch1_addr", list(range(3)))
+        self.add_rand("ch2_addr", list(range(3)))
         self.add_rand("crc_en", [0, 1])
 
-        #TODO: remove when CRC is implemented
+        # TODO: remove when CRC is implemented
         self.add_constraint(lambda crc_en: crc_en == 0)
+
 
 class YasPkt():
     def __init__(self, addr=0, data_size=0, data=[], crc_init=0):
@@ -76,6 +53,7 @@ class YasPkt():
     def calc_crc(self):
         pass
 
+
 class YasPktRand(YasPkt, Randomized):
     def __init__(self):
         Randomized.__init__(self)
@@ -84,10 +62,12 @@ class YasPktRand(YasPkt, Randomized):
         self.add_rand("addr", list(range(3)))
         self.add_rand("data_size", list(range(1, 64)))
 
+    # populate data list bytewise
     def post_randomize(self):
-        self.data = [r.randint(0, 255) for _ in range(self.data_size)] # populate data list
+        self.data = [r.randint(0, 255) for _ in range(self.data_size)]
 
-#TODO: create Bus bundle or use one from cocotb
+
+# TODO: create Bus bundle or use one from cocotb
 class ConfigDriver(Driver):
     """ Class for reading/writing yas router config registers """
     def __init__(self, name, dut_clock, dut_data, dut_addr, dut_config_en):
@@ -97,16 +77,16 @@ class ConfigDriver(Driver):
         self.addr_port = dut_addr
         self.en_port = dut_config_en
         Driver.__init__(self)
-        self._reset()
+        self.reset()
 
-    def _reset(self):
+    def reset(self):
         self.log.info(f"{self.name} in reset")
         self.data_port.setimmediatevalue(0)
         self.addr_port.setimmediatevalue(0)
         self.en_port.setimmediatevalue(0)
 
     @cocotb.coroutine
-    def _driver_send(self, config):
+    def _driver_send(self, config, **kwargs):
         self.log.info(f"{self.name}: configuring router with {config}")
         for addr, val in config.addr_map.items():
             self.en_port <= 1
@@ -149,6 +129,4 @@ class InputPktDriver(Driver):
                     break
                 yield RisingEdge(self.clock)
         self.log.info(f"{self.name}: finished sending packet {pkt}")
-
-
 

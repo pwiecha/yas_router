@@ -45,7 +45,6 @@ module yas_router_top
   wire [2:0] fifo_empty;
   wire [2:0] fifo_pop;
 
-  assign fifo_data_out = data_out;
   // -------------------- INSTANCES --------------------
   input_logic
   #(
@@ -91,7 +90,7 @@ module yas_router_top
       .level(),
       .push(fifo_push[i]),
       .pop(fifo_pop[i]),
-      .data_out(fifo_data_out),
+      .data_out(fifo_data_out[8*i+:8]), //indexed part-select
       .full(fifo_full[i]),
       .empty(fifo_empty[i])
     );

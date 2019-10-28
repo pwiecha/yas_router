@@ -2,7 +2,7 @@
 #      directed and constrained random tests ----------
 # Cocotb imports
 import cocotb
-from cocotb.clock import Clock, Timer
+from cocotb.clock import Timer
 from cocotb.triggers import RisingEdge
 from cocotb.result import TestFailure, TestSuccess
 from cocotb_coverage.coverage import *
@@ -11,9 +11,9 @@ from cocotb_coverage.coverage import *
 import sys, os
 import random
 import itertools
-sys.path.append(os.path.dirname(__file__) + '/../')
 
 # Local modules
+sys.path.append(os.path.dirname(__file__) + '/../')
 import tb_common
 
 @cocotb.test()

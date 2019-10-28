@@ -1,5 +1,5 @@
 PWD=$(shell pwd)
-SRC_DIR = $(PWD)/../../rtl
+RTL_DIR = $(PWD)/../../rtl
 TOPLEVEL_LANG := verilog
 
 #export PYTHONHOME := ${_PYTHONHOME}
