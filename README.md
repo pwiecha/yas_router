@@ -1,5 +1,6 @@
 # yas_router
-Yet Another Simple Router - a comprehensive COCOTB verification example of the Verilog RTL simple router model
+Yet Another Simple Router - a COCOTB verification example of the Verilog RTL simple router model
+This is a work in progress. Feel free to use this to kickstart your verification environment. Take a look at e.g. ArgParser from common to easily process your command line arguments.
 
 Initial Specification  
 
