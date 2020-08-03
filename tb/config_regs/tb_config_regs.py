@@ -83,7 +83,7 @@ def randomized_test(dut):
 
     coverage_db.report_coverage(log.info, bins=True)
     coverage = coverage_db["top"].coverage*100/coverage_db["top"].size
-    coverage_db.export_to_yaml(os.getenv("COVERAGE_RESULTS_FILENAME", "results_coverage.yml"))
+    # coverage_db.export_to_yaml(os.getenv("COVERAGE_RESULTS_FILENAME", "results_coverage.yml")) # TODO wait for cocotb-coverage 1.0.5 release
     error_cnt = len(failed_test_ids)
     if error_cnt == 0:
         raise TestSuccess(f"\nSummary: coverage achieved: {coverage:.2f}%")

@@ -7,6 +7,7 @@ import cocotb_coverage.coverage as cov
 def pytest_runtest_setup(item):
     print("Setting up", item)
 
+'''
 # Post session coverage merging
 def pytest_sessionfinish(session, exitstatus):
     print("\nSession finish phase ")
@@ -32,4 +33,4 @@ def pytest_sessionfinish(session, exitstatus):
         except:
             print(f"Error occured when trying to delete {f}")
             raise
-
+'''

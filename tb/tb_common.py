@@ -6,7 +6,7 @@ from cocotb.clock import Clock
 #--------------------------------------------------
 @cocotb.coroutine
 def wait_clock_cycles(clock, no_of_clock_cycles):
-    for cycle in range(no_of_clock_cycles):
+    for _ in range(no_of_clock_cycles):
         yield RisingEdge(clock)
 
 def create_clock(clk, clk_freq, logger):
@@ -58,7 +58,7 @@ class ArgParser(object):
                         logger.info(f"setting key {key} of type {key_type} to {plusargs[key]} {key_type(plusargs[key])}")
                         setattr(self, key, key_type(plusargs[key]))
                 except ValueError:
-                    raise TestFailure(f"{class_name}: cannot convert {key} to type {key_type}")
+                    raise cocotb.result.TestFailure(f"{class_name}: cannot convert {key} to type {key_type}")
 
         # Print all keys to the console
         logger.info(80*"=")
