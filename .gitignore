@@ -16,3 +16,4 @@ __pycache__/
 
 # Vim swap files
 *.swp
+.vscode/settings.json
