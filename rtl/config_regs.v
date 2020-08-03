@@ -12,22 +12,22 @@ module config_regs
   parameter CRC_EN_REG_ADDR = 2'h3
 )
 (
-  input        clk,
-  input        rst_n,
-  input  [1:0] config_addr,
-  input  [1:0] config_data,
-  input        config_en,
+  input clk,
+  input rst_n,
+  input [1:0] config_addr,
+  input [1:0] config_data,
+  input config_en,
   output [1:0] ch0_addr,
   output [1:0] ch1_addr,
   output [1:0] ch2_addr,
-  output       crc_en
+  output crc_en
 );
 
   // Registers
-  reg   [1:0] ch0_addr_r;
-  reg   [1:0] ch1_addr_r;
-  reg   [1:0] ch2_addr_r;
-  reg         crc_en_r;
+  reg [1:0] ch0_addr_r;
+  reg [1:0] ch1_addr_r;
+  reg [1:0] ch2_addr_r;
+  reg crc_en_r;
 
   // Output connections
   assign ch0_addr = ch0_addr_r;
